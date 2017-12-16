@@ -35,7 +35,7 @@ class SentimentAnalysis:
         save_classifier.close()
 
     def loadClassifier(self, modelFilePath):
-        classifier_f = open("naivebayes.pickle", "rb")
+        classifier_f = open(modelFilePath, "rb")
         classifier = pickle.load(classifier_f)
         classifier_f.close()
 
@@ -61,19 +61,19 @@ class SentimentAnalysis:
             classifier = SklearnClassifier(SGDClassifier())
             classifier.train(trainingData)
         elif classifierType == "SVC":
-            classifier = SklearnClassifier(SVC())
+            classifier = SklearnClassifier(SVC(probability=True))
             classifier.train(trainingData)
         elif classifierType == "LinearSVC":
             classifier = SklearnClassifier(LinearSVC())
             classifier.train(trainingData)
         elif classifierType == "NuSVC":
-            classifier = SklearnClassifier(NuSVC())
+            classifier = SklearnClassifier(NuSVC(probability=True))
             classifier.train(trainingData)
 
         return classifier
 
 
-def main():
+if __name__ == "__main__":
     sentimentAnalysis = SentimentAnalysis()
 
     documents = [(list(movie_reviews.words(fileid)), category)
@@ -91,17 +91,18 @@ def main():
     # set that we'll test against.
     testingSet = featuresets[1900:]
 
-    classifierType = "BernoulliNB"
-    modelFilePath = classifierType + ".pickle"
+    classifierType = "SVC"
+    modelFilePath = "models/" + classifierType + ".pickle"
 
-    #classifier = sentimentAnalysis.trainClassifier(trainingSet, classifierType)
-    #sentimentAnalysis.serializeClassifier(classifier, modelFilePath)
+    classifier = sentimentAnalysis.trainClassifier(trainingSet, classifierType)
+    sentimentAnalysis.serializeClassifier(classifier, modelFilePath)
 
     classifier = sentimentAnalysis.loadClassifier(modelFilePath)
 
     print("Classifier '" + classifierType + "' accuracy percent:", (nltk.classify.accuracy(classifier, testingSet)) * 100)
 
     print("classes lables: " + str(classifier.labels()))
+
 
     # to classify new sentence use
 
@@ -124,7 +125,3 @@ def main():
     for label in labelsProbabiliies.samples():
         print("%s: %f" % (label, labelsProbabiliies.prob(label)))
 
-
-
-
-main()
