@@ -20,6 +20,7 @@ def build_pipeline():
     # element contains the content of the example file
     dataset_labels, dataset = load_dataset('Twitter')
 
+    # Building the pipeline processing
     pipeline = Pipeline([
         ('vect', CountVectorizer()),
         ('tfidf', TfidfTransformer()),
@@ -28,6 +29,7 @@ def build_pipeline():
                                      max_iter=5, tol=None)),
     ])
 
+    # Cross validating the pipeline
     scores = cross_val_score(pipeline,  # steps to convert raw messages into models
                              list(dataset.values()),  # training data
                              dataset_labels,  # training labels
@@ -35,13 +37,24 @@ def build_pipeline():
                              scoring='accuracy',  # which scoring metric?
                              n_jobs=-1,  # -1 = use all cores = faster
                              )
-    print(scores)
 
+    print()
+    print('Scores of the cross validation folds are: ')
+    print(scores)
+    print('----------------------------------------------------------------------')
+    print('Mean score of the cross validation folds is: ')
+    print(scores.mean())
+
+    # Fitting the pipeline on the data-set
     pipeline.fit(dataset, dataset_labels)
 
+    # Using the pipeline to predict new examples. The same training data is used
     predicted = pipeline.predict(dataset)
     np.mean(predicted == dataset_labels)
 
+    # Confusion matrix
+    print()
+    print('Confusion matrix of the testing data (testing data = training data)')
     print(metrics.classification_report(dataset_labels, predicted,
                                         target_names=categories))
 
@@ -81,6 +94,7 @@ if __name__ == "__main__":
     serializeClassifier(classifier, modelFilePath)
 
     # Testing
+    print('Testing a new data example ...')
     docs_new = ['اسال الله في علاه ان يحفظكم بما يحفظ به عباده الصالحون']
 
     X_new_counts = count_vect.transform(docs_new)
