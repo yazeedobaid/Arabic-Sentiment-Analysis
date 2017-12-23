@@ -7,12 +7,28 @@ from sklearn import metrics
 import pickle
 from sklearn.model_selection import cross_val_score
 from load_dataset import *
+from Stemming import Stemming
 
+
+from stopWords import StopWords
 
 def serializeClassifier(classifier, modelFilePath):
     save_classifier = open(modelFilePath, "wb")
     pickle.dump(classifier, save_classifier)
     save_classifier.close()
+
+
+def preprocessing(dataset):
+    filtered_dataset = {}
+    lang = 'arabic'
+    stopwords = StopWords()
+    stemming = Stemming()
+    for exampleKey, exampleValue in dataset.items():
+        filtered_sentence = stopwords.removeStopWords(exampleValue, lang)
+        filtered_sentence = stemming.stemWord(filtered_sentence)
+        filtered_dataset[exampleKey] = filtered_sentence
+
+    return filtered_dataset
 
 
 def build_pipeline():
@@ -53,12 +69,12 @@ def build_pipeline():
     np.mean(predicted == dataset_labels)
 
     # Confusion matrix
-    print()
-    print('Confusion matrix of the testing data (testing data = training data)')
-    print(metrics.classification_report(dataset_labels, predicted,
-                                        target_names=categories))
-
-    metrics.confusion_matrix(dataset_labels, predicted)
+    # print()
+    # print('Confusion matrix of the testing data (testing data = training data)')
+    # print(metrics.classification_report(dataset_labels, predicted,
+    #                                     target_names=categories))
+    #
+    # metrics.confusion_matrix(dataset_labels, predicted)
 
 
 if __name__ == "__main__":
@@ -73,6 +89,9 @@ if __name__ == "__main__":
     # Loading the data-set. The data-set is loaded as a dictionary with each
     # element contains the content of the example file
     dataset_labels, dataset = load_dataset('Twitter')
+
+    # Preprocessing of data-set
+    dataset = preprocessing(dataset)
 
     # Using the vector count class to count the terms and tokens in the data-set
     count_vect = CountVectorizer(encoding='latin-1', ngram_range=(1,2))
@@ -95,7 +114,7 @@ if __name__ == "__main__":
 
     # Testing
     print('Testing a new data example ...')
-    docs_new = ['الحمد لله رب العالمين']
+    docs_new = ['الحياة صعب شباب']
 
     X_new_counts = count_vect.transform(docs_new)
     X_new_tfidf = tfidf_transformer.transform(X_new_counts)
