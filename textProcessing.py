@@ -75,7 +75,7 @@ if __name__ == "__main__":
     dataset_labels, dataset = load_dataset('Twitter')
 
     # Using the vector count class to count the terms and tokens in the data-set
-    count_vect = CountVectorizer(encoding='latin-1')
+    count_vect = CountVectorizer(encoding='latin-1', ngram_range=(1,2))
     X_train_counts = count_vect.fit_transform(dataset.values())
 
     # Using the TF-IDS transformation as a feature of the data-set
@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     # Testing
     print('Testing a new data example ...')
-    docs_new = ['اسال الله في علاه ان يحفظكم بما يحفظ به عباده الصالحون']
+    docs_new = ['الحمد لله رب العالمين']
 
     X_new_counts = count_vect.transform(docs_new)
     X_new_tfidf = tfidf_transformer.transform(X_new_counts)
