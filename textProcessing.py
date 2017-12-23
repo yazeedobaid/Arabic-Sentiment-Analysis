@@ -8,6 +8,7 @@ import pickle
 from sklearn.model_selection import cross_val_score
 from load_dataset import *
 from Stemming import Stemming
+from Normalization import Normalization
 
 
 from stopWords import StopWords
@@ -23,9 +24,11 @@ def preprocessing(dataset):
     lang = 'arabic'
     stopwords = StopWords()
     stemming = Stemming()
+    normalization = Normalization()
     for exampleKey, exampleValue in dataset.items():
         filtered_sentence = stopwords.removeStopWords(exampleValue, lang)
         filtered_sentence = stemming.stemWord(filtered_sentence)
+        filtered_sentence = normalization.normalizeText(filtered_sentence)
         filtered_dataset[exampleKey] = filtered_sentence
 
     return filtered_dataset
