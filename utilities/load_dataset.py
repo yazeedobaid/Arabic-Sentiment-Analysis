@@ -1,6 +1,5 @@
 import os
 import csv
-import pprint
 
 
 def load_dataset(datasetRootDirectory):
@@ -36,8 +35,8 @@ def load_dataset(datasetRootDirectory):
     return file_label, file_dict
 
 
-# Function to convert a csv file to a list of dictionaries.  Takes in one variable called "variables_file"
 
+# Function to convert a csv file to a list of dictionaries.  Takes in one variable called "variables_file"
 def csv_dict_list(variables_file):
     # Create an empty dict
     file_dict = {}
@@ -60,7 +59,3 @@ def csv_dict_list(variables_file):
         counter += 1
 
     return file_label, file_dict
-
-# Prints the results nice and pretty like
-# print(file_label[0])
-# print(file_dict[0])
