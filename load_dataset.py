@@ -1,8 +1,9 @@
 import os
+import csv
+import pprint
 
 
 def load_dataset(datasetRootDirectory):
-
     # Select your file delimiter
     ext = '.txt'
 
@@ -28,8 +29,38 @@ def load_dataset(datasetRootDirectory):
             file_dict[txt_file] = file_object.read()
             file_label.append(label)
 
-    #Iterate over your dict and print the key/val pairs.
+    # Iterate over your dict and print the key/val pairs.
     # for i in file_dict:
     #     print(i, file_dict[i])
 
     return file_label, file_dict
+
+
+# Function to convert a csv file to a list of dictionaries.  Takes in one variable called "variables_file"
+
+def csv_dict_list(variables_file):
+    # Create an empty dict
+    file_dict = {}
+
+    # data-set examples labels
+    file_label = []
+
+    # Open variable-based csv, iterate over the rows and map values to a list of dictionaries containing key/value pairs
+    reader = csv.DictReader(open(variables_file, 'rt', encoding="utf-8"))
+    counter = 0
+    for line in reader:
+        if line['polarity'] == '1.0':
+            # file_label.append('Positive')
+            file_label.append(1)
+        else:
+            # file_label.append('Negative')
+            file_label.append(-1)
+        file_dict[str(counter)] = line['text']
+
+        counter += 1
+
+    return file_label, file_dict
+
+# Prints the results nice and pretty like
+# print(file_label[0])
+# print(file_dict[0])

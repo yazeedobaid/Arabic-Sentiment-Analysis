@@ -10,8 +10,8 @@ from load_dataset import *
 from Stemming import Stemming
 from Normalization import Normalization
 
-
 from stopWords import StopWords
+
 
 def serializeClassifier(classifier, modelFilePath):
     save_classifier = open(modelFilePath, "wb")
@@ -37,7 +37,10 @@ def preprocessing(dataset):
 def build_pipeline():
     # Loading the data-set. The data-set is loaded as a dictionary with each
     # element contains the content of the example file
-    dataset_labels, dataset = load_dataset('Twitter')
+    # dataset_labels, dataset = load_dataset('Twitter')
+
+    # Calls the csv_dict_list function, passing the named csv
+    dataset_labels, dataset = csv_dict_list("ATT.csv")
 
     # Building the pipeline processing
     pipeline = Pipeline([
@@ -53,7 +56,7 @@ def build_pipeline():
                              list(dataset.values()),  # training data
                              dataset_labels,  # training labels
                              cv=10,  # split data randomly into 10 parts: 9 for training, 1 for scoring
-                             scoring='accuracy',  # which scoring metric?
+                             scoring='f1',  # which scoring metric?
                              n_jobs=-1,  # -1 = use all cores = faster
                              )
 
@@ -76,8 +79,8 @@ def build_pipeline():
     # print('Confusion matrix of the testing data (testing data = training data)')
     # print(metrics.classification_report(dataset_labels, predicted,
     #                                     target_names=categories))
-    #
-    # metrics.confusion_matrix(dataset_labels, predicted)
+
+    metrics.confusion_matrix(dataset_labels, predicted)
 
 
 if __name__ == "__main__":
@@ -91,13 +94,16 @@ if __name__ == "__main__":
 
     # Loading the data-set. The data-set is loaded as a dictionary with each
     # element contains the content of the example file
-    dataset_labels, dataset = load_dataset('Twitter')
+    # dataset_labels, dataset = load_dataset('Twitter')
+
+    # Calls the csv_dict_list function, passing the named csv
+    dataset_labels, dataset = csv_dict_list("ATT.csv")
 
     # Preprocessing of data-set
     dataset = preprocessing(dataset)
 
     # Using the vector count class to count the terms and tokens in the data-set
-    count_vect = CountVectorizer(encoding='latin-1', ngram_range=(1,2))
+    count_vect = CountVectorizer(encoding='latin-1', ngram_range=(1, 2))
     X_train_counts = count_vect.fit_transform(dataset.values())
 
     # Using the TF-IDS transformation as a feature of the data-set
@@ -117,7 +123,7 @@ if __name__ == "__main__":
 
     # Testing
     print('Testing a new data example ...')
-    docs_new = ['الحياة صعب شباب']
+    docs_new = ['الحياة صعبة شباب']
 
     X_new_counts = count_vect.transform(docs_new)
     X_new_tfidf = tfidf_transformer.transform(X_new_counts)
@@ -125,6 +131,9 @@ if __name__ == "__main__":
     predicted = classifier.predict(X_new_tfidf)
 
     for doc, category in zip(docs_new, predicted):
-        print('%r => %s' % (doc, categories[category]))
+        if category == 1 or category == -1:
+            print('%r => %s' % (doc, categories['Positive' if category else 'Negative']))
+        else:
+            print('%r => %s' % (doc, categories[category]))
 
     build_pipeline()
