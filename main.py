@@ -1,4 +1,7 @@
+import time
+
 import numpy as np
+
 from sklearn import metrics
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
@@ -6,8 +9,10 @@ from sklearn.pipeline import Pipeline
 from preprocessing.Normalization import Normalization
 from preprocessing.Stemming import Stemming
 from preprocessing.stopWords import StopWords
+
 from utilities.feature_extraction import *
 from utilities.load_dataset import *
+
 from sentiment_analysis import *
 
 
@@ -52,19 +57,13 @@ def preprocessing(dataset):
 # technique.
 #
 #   PARAMETERS:
-#       - No parameters provided!
+#       - dataset: a dictionary of the data-set samples
+#       - dataset_labels: labels of each data-set example
 #
 #   RETURNS:
 #       - No return value!
 #-----------------------------------------------------------------------------------------------------------------------
-def build_pipeline():
-    # Loading the data-set. The data-set is loaded as a dictionary with each
-    # element contains the content of the example file
-    # dataset_labels, dataset = load_dataset('datasets/Twitter')
-
-    # Calls the csv_dict_list function, passing the named csv
-    dataset_labels, dataset = csv_dict_list("datasets/ATT.csv")
-
+def build_pipeline(dataset, dataset_labels, scoring_metric):
     # Building the pipeline processing
     pipeline = Pipeline([
         ('vect', CountVectorizer()),
@@ -79,7 +78,7 @@ def build_pipeline():
                              list(dataset.values()),  # training data
                              dataset_labels,  # training labels
                              cv=10,  # split data randomly into 10 parts: 9 for training, 1 for scoring
-                             scoring='f1',  # which scoring metric?
+                             scoring=scoring_metric,  # which scoring metric?
                              n_jobs=-1,  # -1 = use all cores = faster
                              )
 
@@ -155,4 +154,56 @@ if __name__ == "__main__":
 
 
     # evaluation of the classifier
-    build_pipeline()
+    # dataset_labels, dataset = load_dataset('datasets/Twitter')
+
+    # Loading the data-set. The data-set is loaded as a dictionary with each
+    # element contains the content of the example file
+    dataset_labels, dataset = csv_dict_list("datasets/ATT.csv")
+    build_pipeline(dataset, dataset_labels, 'f1')
+
+
+def all_datasets_results():
+    # the metric to use in the evaluation of the cross validation on the data-set
+    scoring_metric = 'f1'
+
+    # Loading the data-set. The data-set is loaded as a dictionary with each
+    # element contains the content of the example file
+    # build the pipeline and get results
+
+    # testing the model on Twitter data-set
+    print('***********************************************************************************************************')
+    print('Testing the model on Twitter Tweets data-set')
+    dataset_labels, dataset = load_dataset('datasets/Twitter')
+    build_pipeline(dataset, dataset_labels, scoring_metric)
+
+    # testing the model on Attraction Reviews data-set
+    print('***********************************************************************************************************')
+    print('Testing the model on Attraction Reviews data-set')
+    dataset_labels, dataset = csv_dict_list('datasets/ATT.csv')
+    build_pipeline(dataset, dataset_labels, scoring_metric)
+
+    # testing the model on Hotel Reviews data-set
+    dataset_labels, dataset = csv_dict_list('datasets/HTL.csv')
+    build_pipeline(dataset, dataset_labels, scoring_metric)
+
+    # testing the model on Movie Reviews data-set
+    print('***********************************************************************************************************')
+    print('Testing the model on Movie Reviews data-set')
+    dataset_labels, dataset = csv_dict_list('datasets/MOV.csv')
+    build_pipeline(dataset, dataset_labels, scoring_metric)
+
+    # testing the model on Product Reviews data-set
+    print('***********************************************************************************************************')
+    print('Testing the model on Product Reviews data-set')
+    dataset_labels, dataset = csv_dict_list('datasets/PROD.csv')
+    build_pipeline(dataset, dataset_labels, scoring_metric)
+
+    # testing the model on Restaurants Reviews data-set
+    print('***********************************************************************************************************')
+    print('Testing the model on Restaurants Reviews data-set')
+    dataset_labels, dataset = csv_dict_list('datasets/RES.csv')
+    build_pipeline(dataset, dataset_labels, scoring_metric)
+    print('***********************************************************************************************************')
+
+
+#all_datasets_results()
