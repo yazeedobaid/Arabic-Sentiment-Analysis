@@ -26,7 +26,10 @@ def load_dataset(datasetRootDirectory):
         with open(os.path.join(txt_file), encoding="utf-8", errors='replace') as file_object:
             label = txt_file.split('\\')[-2]
             file_dict[txt_file] = file_object.read()
-            file_label.append(label)
+            if label == 'Negative':
+                file_label.append(-1)
+            else:
+                file_label.append(1)
 
     # Iterate over your dict and print the key/val pairs.
     # for i in file_dict:
