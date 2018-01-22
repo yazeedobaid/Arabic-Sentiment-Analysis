@@ -13,6 +13,8 @@ from preprocessing.stopWords import StopWords
 from utilities.feature_extraction import *
 from utilities.load_dataset import *
 
+from sklearn.naive_bayes import MultinomialNB
+
 from sentiment_analysis import *
 
 
@@ -68,10 +70,14 @@ def build_pipeline(dataset, dataset_labels, scoring_metric):
     pipeline = Pipeline([
         ('vect', CountVectorizer()),
         ('tfidf', TfidfTransformer()),
-        ('classifier', SGDClassifier(loss='hinge', penalty='l2',
-                                     alpha=1e-3, random_state=42,
-                                     max_iter=5, tol=None)),
+        ('classifier', MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)),
     ])
+
+    # USE FOR naive bias classifier
+    # MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)
+
+    # USE FOR SVM SGD classifier
+    # SGDClassifier(loss='hinge', penalty='l2', alpha=1e-3, random_state=42, max_iter=5, tol=None)
 
     # Cross validating the pipeline
     scores = cross_val_score(pipeline,  # steps to convert raw messages into models
@@ -79,7 +85,7 @@ def build_pipeline(dataset, dataset_labels, scoring_metric):
                              dataset_labels,  # training labels
                              cv=10,  # split data randomly into 10 parts: 9 for training, 1 for scoring
                              scoring=scoring_metric,  # which scoring metric?
-                             n_jobs=-1,  # -1 = use all cores = faster
+                             n_jobs=1,  # -1 = use all cores = faster
                              )
 
     print()
