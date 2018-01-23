@@ -51,7 +51,7 @@ def csv_dict_list(variables_file):
     reader = csv.DictReader(open(variables_file, 'rt', encoding="utf-8"))
     counter = 0
     for line in reader:
-        if line['polarity'] == '1.0':
+        if line['polarity'] == '1':
             # file_label.append('Positive')
             file_label.append(1)
         else:
