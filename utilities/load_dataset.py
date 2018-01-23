@@ -40,7 +40,7 @@ def load_dataset(datasetRootDirectory):
 
 
 # Function to convert a csv file to a list of dictionaries.  Takes in one variable called "variables_file"
-def csv_dict_list(variables_file):
+def csv_dict_list(variables_file, counter):
     # Create an empty dict
     file_dict = {}
 
@@ -49,7 +49,7 @@ def csv_dict_list(variables_file):
 
     # Open variable-based csv, iterate over the rows and map values to a list of dictionaries containing key/value pairs
     reader = csv.DictReader(open(variables_file, 'rt', encoding="utf-8"))
-    counter = 0
+    #counter = 0
     for line in reader:
         if line['polarity'] == '1':
             # file_label.append('Positive')
@@ -61,4 +61,4 @@ def csv_dict_list(variables_file):
 
         counter += 1
 
-    return file_label, file_dict
+    return file_label, file_dict, counter

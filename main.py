@@ -18,7 +18,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sentiment_analysis import *
 
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Rre-process the data-set, pre-processing includes:
 #   1. Stop word removal using NLTK pre-defined Arabic stop word list.
 #   2. Sentence tokenization into words.
@@ -30,7 +30,7 @@ from sentiment_analysis import *
 #
 #   RETURNS:
 #       - filtered data-set: data-set after pre-processing
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 def preprocessing(dataset):
     lang = 'arabic'
     stopwords = StopWords()
@@ -54,7 +54,7 @@ def preprocessing(dataset):
         return filtered_example
 
 
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 # Build a processing pipeline and evaluate the pipeline classifier using cross validation
 # technique.
 #
@@ -64,13 +64,13 @@ def preprocessing(dataset):
 #
 #   RETURNS:
 #       - No return value!
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 def build_pipeline(dataset, dataset_labels, scoring_metric):
     # Building the pipeline processing
     pipeline = Pipeline([
         ('vect', CountVectorizer()),
         ('tfidf', TfidfTransformer()),
-        ('classifier', MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)),
+        ('classifier', SGDClassifier(loss='hinge', penalty='l2', alpha=1e-3, random_state=42, max_iter=5, tol=None)),
     ])
 
     # USE FOR naive bias classifier
@@ -111,12 +111,7 @@ def build_pipeline(dataset, dataset_labels, scoring_metric):
     metrics.confusion_matrix(dataset_labels, predicted)
 
 
-
-# -----------------------------------------------------------------------------------------------------------------------
-# The main method of the script. The script train and test the classifier on a new input data
-#-----------------------------------------------------------------------------------------------------------------------
-if __name__ == "__main__":
-
+def train_on_unified_dataset():
     # Name of the classifier to use in learning process and its path of serialization
     classifierType = "svm"
     modelFilePath = "models/" + classifierType + ".pickle"
@@ -124,12 +119,99 @@ if __name__ == "__main__":
     # Defining categories of the classes to use in model
     categories = {'Positive': 'pos', 'Negative': 'neg'}
 
+    counter = 0
+
+    # -------------------------------------------------------------------------------------------------------------------
     # Loading the data-set. The data-set is loaded as a dictionary with each
     # element contains the content of the example file
-    # dataset_labels, dataset = load_dataset('datasets/Twitter')
+    dataset_labels, dataset = load_dataset('datasets/Twitter')
 
+    # ------------------------------------------------------------------------------------------------------------------
     # Calls the csv_dict_list function, passing the named csv
-    dataset_labels, dataset = csv_dict_list("datasets/ATT.csv")
+    dataset_labels2, dataset2, counter = csv_dict_list("datasets/ATT.csv", counter)
+    dataset_labels += dataset_labels2
+    dataset.update(dataset2)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Calls the csv_dict_list function, passing the named csv
+    dataset_labels3, dataset3, counter = csv_dict_list("datasets/HTL.csv", counter)
+    dataset_labels += dataset_labels3
+    dataset.update(dataset3)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Calls the csv_dict_list function, passing the named csv
+    dataset_labels4, dataset4, counter = csv_dict_list("datasets/MOV.csv", counter)
+    dataset_labels += dataset_labels4
+    dataset.update(dataset4)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Calls the csv_dict_list function, passing the named csv
+    dataset_labels5, dataset5, counter = csv_dict_list("datasets/PROD.csv", counter)
+    dataset_labels += dataset_labels5
+    dataset.update(dataset5)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Calls the csv_dict_list function, passing the named csv
+    dataset_labels6, dataset6, counter = csv_dict_list("datasets/RES.csv", counter)
+    dataset_labels += dataset_labels6
+    dataset.update(dataset6)
+
+    # Preprocessing of data-set
+    dataset = preprocessing(dataset)
+
+    # feature extraction, tf-idf transformation
+    count_vect, X_train_tfidf, tfidf_transformer = tf_idf_features(dataset)
+
+    # an object from sentiment analysis module to use in training and testing
+    sent_anal = sentiment_analysis()
+
+    # train a classifier
+    print('Training a classifier is in progress ...')
+    classifier = sent_anal.sentiment_analysis_train(X_train_tfidf, dataset_labels, classifierType,
+                                                             modelFilePath)
+
+    # Cross validation
+    build_pipeline(dataset, dataset_labels, 'accuracy')
+
+    print('Training done')
+    print('-------------------------------------------------------------')
+    # loading the classifier. Un-commit if a classifier already exists
+    classifier = readSerializedClassifier(modelFilePath)
+
+    # testing a new input example
+    print('Testing a new data example ...')
+    input_text = ['الحياة صعبة شباب']
+
+    filtered_input_text = list()
+    filtered_input_text.append(preprocessing(''.join(input_text)))
+
+    sent_anal.sentiment_analysis_test(filtered_input_text, classifier, count_vect, X_train_tfidf,
+                                               tfidf_transformer, categories)
+
+
+# -----------------------------------------------------------------------------------------------------------------------
+# The main method of the script. The script train and test the classifier on a new input data
+# -----------------------------------------------------------------------------------------------------------------------
+if __name__ == "__main__":
+    # Name of the classifier to use in learning process and its path of serialization
+    classifierType = "svm"
+    modelFilePath = "models/" + classifierType + ".pickle"
+
+    # Defining categories of the classes to use in model
+    categories = {'Positive': 'pos', 'Negative': 'neg'}
+
+    counter = 0
+
+    # -------------------------------------------------------------------------------------------------------------------
+    # Loading the data-set. The data-set is loaded as a dictionary with each
+    # element contains the content of the example file
+    dataset_labels, dataset = load_dataset('datasets/Twitter')
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Calls the csv_dict_list function, passing the named csv
+    dataset_labels2, dataset2, counter = csv_dict_list("datasets/ATT.csv", counter)
+    dataset_labels += dataset_labels2
+    dataset.update(dataset2)
 
     # Preprocessing of data-set
     dataset = preprocessing(dataset)
@@ -142,12 +224,16 @@ if __name__ == "__main__":
 
     # train a classifier
     print('Training a classifier is in progress ...')
-    classifier = sentiment_analysis.sentiment_analysis_train(X_train_tfidf, dataset_labels, classifierType, modelFilePath)
+    classifier = sentiment_analysis.sentiment_analysis_train(X_train_tfidf, dataset_labels, classifierType,
+                                                             modelFilePath)
+
+    # Cross validation
+    build_pipeline(dataset, dataset_labels, 'accuracy')
 
     print('Training done')
     print('-------------------------------------------------------------')
     # loading the classifier. Un-commit if a classifier already exists
-    #classifier = readSerializedClassifier(modelFilePath)
+    classifier = readSerializedClassifier(modelFilePath)
 
     # testing a new input example
     print('Testing a new data example ...')
@@ -156,60 +242,8 @@ if __name__ == "__main__":
     filtered_input_text = list()
     filtered_input_text.append(preprocessing(''.join(input_text)))
 
-    sentiment_analysis.sentiment_analysis_test(filtered_input_text, classifier, count_vect, X_train_tfidf, tfidf_transformer, categories)
+    sentiment_analysis.sentiment_analysis_test(filtered_input_text, classifier, count_vect, X_train_tfidf,
+                                               tfidf_transformer, categories)
 
 
-    # evaluation of the classifier
-    # dataset_labels, dataset = load_dataset('datasets/Twitter')
-
-    # Loading the data-set. The data-set is loaded as a dictionary with each
-    # element contains the content of the example file
-    dataset_labels, dataset = csv_dict_list("datasets/ATT.csv")
-    build_pipeline(dataset, dataset_labels, 'f1')
-
-
-def all_datasets_results():
-    # the metric to use in the evaluation of the cross validation on the data-set
-    scoring_metric = 'f1'
-
-    # Loading the data-set. The data-set is loaded as a dictionary with each
-    # element contains the content of the example file
-    # build the pipeline and get results
-
-    # testing the model on Twitter data-set
-    print('***********************************************************************************************************')
-    print('Testing the model on Twitter Tweets data-set')
-    dataset_labels, dataset = load_dataset('datasets/Twitter')
-    build_pipeline(dataset, dataset_labels, scoring_metric)
-
-    # testing the model on Attraction Reviews data-set
-    print('***********************************************************************************************************')
-    print('Testing the model on Attraction Reviews data-set')
-    dataset_labels, dataset = csv_dict_list('datasets/ATT.csv')
-    build_pipeline(dataset, dataset_labels, scoring_metric)
-
-    # testing the model on Hotel Reviews data-set
-    dataset_labels, dataset = csv_dict_list('datasets/HTL.csv')
-    build_pipeline(dataset, dataset_labels, scoring_metric)
-
-    # testing the model on Movie Reviews data-set
-    print('***********************************************************************************************************')
-    print('Testing the model on Movie Reviews data-set')
-    dataset_labels, dataset = csv_dict_list('datasets/MOV.csv')
-    build_pipeline(dataset, dataset_labels, scoring_metric)
-
-    # testing the model on Product Reviews data-set
-    print('***********************************************************************************************************')
-    print('Testing the model on Product Reviews data-set')
-    dataset_labels, dataset = csv_dict_list('datasets/PROD.csv')
-    build_pipeline(dataset, dataset_labels, scoring_metric)
-
-    # testing the model on Restaurants Reviews data-set
-    print('***********************************************************************************************************')
-    print('Testing the model on Restaurants Reviews data-set')
-    dataset_labels, dataset = csv_dict_list('datasets/RES.csv')
-    build_pipeline(dataset, dataset_labels, scoring_metric)
-    print('***********************************************************************************************************')
-
-
-#all_datasets_results()
+#train_on_unified_dataset()
